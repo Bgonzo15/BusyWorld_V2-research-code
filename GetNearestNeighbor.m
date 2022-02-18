@@ -19,6 +19,8 @@ for nc=1:NCRAFT %this loop goes through each NCRAFT in the world and gets its ne
                     r=rmin;
                 end
                 craft(nc).distanceArray(n,:) = [craft(n).ID r];
+            else
+                craft(nc).distanceArray(n,:) = [ 0 1e8]; %test this 
             end
         end
         [B,I] = sort(craft(nc).distanceArray);
