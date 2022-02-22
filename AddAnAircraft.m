@@ -1,12 +1,13 @@
-function craft=AddAnAircraft(NC,craft,vehicle,world,k)
+function craft=AddAnAircraft(NC,craft,vehicle,NN,world,k)
 %{
 Generate initial conditions for a new aircraft
- %}
+%}
 
-craft(NC).x=NaN*ones(6,world.KMAX);
-craft(NC).u=NaN*ones(3,world.KMAX);
-craft(NC).xdot=NaN*ones(6,world.KMAX);
-craft(NC).r_min=NaN*ones(1,world.KMAX); % closest distance to nearest vehicle
+craft(NC).x=zeros(6,world.KMAX);
+craft(NC).u=zeros(3,world.KMAX);
+craft(NC).xdot=zeros(6,world.KMAX);
+craft(NC).r_min=NaN*zeros(1,world.KMAX); % closest distance to nearest vehicle
+craft(NC).minDistance= NaN*zeros(1,world.KMAX); % closest distance to nearest vehicle
 craft(NC).Rsafe=vehicle.RSafe(1) + (vehicle.RSafe(2) - vehicle.RSafe(1))*rand(1); % vehicle safe zone radius
 craft(NC).xc=[0;0;0]; % location of safe sphere center in vehicle body frame
 craft(NC).umax(1,1)=vehicle.vdot(1) + (vehicle.vdot(2) - vehicle.vdot(1))*rand(1); % vehicle max acceleration
@@ -18,6 +19,8 @@ craft(NC).S=blkdiag(2,1,1); % scaling of safe zone
 craft(NC).b=[0;0;0];
 
 % Now we go and generate initial and goal states for all the vehicles.
+
+%craft= ComputeNearestNeighborsControl_copy(k,craft,NC,NN);
 craft(NC).u(:,k)=[0;0;0]; % initially at straight & level, constant speed
 [x0,xgoal]=GenerateInitialAndGoalPositions(world);
 v0=vehicle.speed(1) + (vehicle.speed(2) - vehicle.speed(1))*rand(1); % compute initial speed
@@ -32,19 +35,17 @@ craft(NC).xgoal=xgoal;
 craft(NC).ACTIVE=1; % activate this craft.
 craft(NC).k0=k; % time this one became active
 
-return;
+end
 
 function [psi0,gamma0]=ComputeInitialHeading(x0,xgoal)
 %{
 Compute the initial heading of the aircraft
 %}
-
 r=xgoal-x0;
 
 psi0=atan2(r(2),r(1));
 gamma0=atan2(-r(3),norm(r(1:2)));
-
-return;
+end
 
 function [x0,xgoal]=GenerateInitialAndGoalPositions(world)
 %{
@@ -121,8 +122,6 @@ switch face1
         xgoal(1)=FF*world.xlim(1) + FF*(world.xlim(2)-world.xlim(1))*rand(1);
         xgoal(3)=FF*world.zlim(1) + FF*(world.zlim(2)-world.zlim(1))*rand(1);
 end
-
-
-return;
+end
 
 

@@ -5,9 +5,9 @@ function [craft] =GetNearestNeighbor(k,craft,NCRAFT,NN)
     -It then takes those distances and sorts them from nearest to farthest
     neighbors
     -Returns craft that holds a field called
-    index = [ Index of n  nearest aircraft; Sorted distance]
+    craft(nc).minDistance(k) = [pulls the min distance from one aircraft
+    and all other aircrafts]
 %}
-
 for nc=1:NCRAFT %this loop goes through each NCRAFT in the world and gets its nearest neighbors ID and distances
     if craft(nc).ACTIVE % only do computation for active aircraft
         rmin=9999;
@@ -20,28 +20,15 @@ for nc=1:NCRAFT %this loop goes through each NCRAFT in the world and gets its ne
                 end
                 craft(nc).distanceArray(n,:) = [craft(n).ID r];
             else
-                craft(nc).distanceArray(n,:) = [ 0 1e8]; %test this 
+                craft(nc).distanceArray(n,:) = [ 0 1e3]; %test this  
             end
         end
         [B,I] = sort(craft(nc).distanceArray);
         newlySorted = [I(:,2) B(:,2)];
-        
-        %   Technically we're subtracting an aircraft's distance from itself, so its shortest
-        %   distance (first index) will always be zero. So skip that and do the
-        %   next closest NN
-        craft(nc).index = newlySorted(2:NN+1,:);
+        craft(nc).index = newlySorted(1:NN,:);
+        craft(nc).minDistance(k) = newlySorted(1,2); %this pulls the min distance from the list of closest neighbora to the aircraft of focus
     end
 end
-
-%{
-DN=(world.NMAX-world.N_ACTIVE(k))/world.NMAX;
-p_newcraft=rand(1);
-if and(p_newcraft<DN,craft(nc).ACTIVE)
-    NCRAFT=NCRAFT+1;
-    fprintf('Adding an aircraft at k=%d; ... there are now %d aircraft.\n',k+1,NCRAFT)
-    craft=AddAnAircraft(NCRAFT,craft,vehicle,world,k+1);
-end
-%}
 end
 
 %{

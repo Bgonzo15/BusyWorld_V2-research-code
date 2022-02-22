@@ -2,13 +2,15 @@ function [craft,world]=BusyWorld_Run(PLOTFLAG,world,vehicle,craft,NCRAFT,NN)
 k=1;
 
 if PLOTFLAG
-    %Open up a figure for plotting 
+    %Open up a figure for plotting
     figure('Name','Busy World','Units','pixels','Position',[50 50 650 590])
+    %{
     R=norm(craft(1).x(1:3));
     ax=subplot(1,1,1);
     [X,Y,Z]=sphere(20);
     surf(ax,R*X,R*Y,R*Z,'FaceColor','none','EdgeColor',[1 1 1])
     axis equal
+    %}
     plot3(0,0,0,'b.')
     hold on
     for n=1:NCRAFT
@@ -23,17 +25,19 @@ if PLOTFLAG
     set(gca,'XLim',world.xlim,'YLim',world.ylim','ZLim',world.zlim)
     set(gca,'ZDir','reverse')
     drawnow;
-    xlabel('North'); ylabel('East'); zlabel('Down')
+    xlabel("North", 'FontSize',12);
+    ylabel("East", 'FontSize',12);
+    zlabel("Down", 'FontSize',12);
+    title("Dense Airspace Simulation",'FontSize',12);
+    
 end
-%hold on
-
+hold on
 
 while k<=world.KMAX
     
-    craft = ComputeNearestNeighborsControl_copy(k,craft,NCRAFT,NN);
-    %craft = ComputeControlEllipsoidal(k,craft,NCRAFT);
+    craft = ComputeNearestNeighborsControl(k,craft,NCRAFT,NN);
     
-   % now integrate kinematics
+    % now integrate kinematics
     for nn=1:NCRAFT
         world.N_ACTIVE(k)=world.N_ACTIVE(k)+craft(nn).ACTIVE; % count active aircraft
         if craft(nn).ACTIVE
@@ -46,8 +50,17 @@ while k<=world.KMAX
             end
         end
     end
- 
-    if mod(k,2)==0
+    
+    
+    DN=(world.NMAX-world.N_ACTIVE(k))/world.NMAX;
+    p_newcraft=rand(1);
+    if p_newcraft<DN
+        NCRAFT=NCRAFT+1;
+        fprintf('Adding an aircraft at k=%d; ... there are now %d aircraft.\n',k+1,NCRAFT)
+        craft=AddAnAircraft(NCRAFT,craft,vehicle,NN,world,k+1);
+    end
+    %}
+    if mod(k,10)==0
         cla
         for nn=1:NCRAFT
             if craft(nn).ACTIVE
@@ -58,7 +71,7 @@ while k<=world.KMAX
                 plot3(xx(1),yy(1),zz(1),'go')
                 plot3(xx,yy,zz,'b:')
                 plot3(xx(2),yy(2),zz(2),'go')
-              
+                
                 if craft(nn).r_min(k)<1*craft(nn).Rsafe
                     plot3(craft(nn).x(1,k),craft(nn).x(2,k),craft(nn).x(3,k),'ro')
                 else
@@ -68,9 +81,11 @@ while k<=world.KMAX
         end
         drawnow
     end
-    %}
-    k=k+1;
+    k=k+1; 
 end
+
+%plotting active aircrafts at each time step
+
 end
 
 function [x,xdot]=IntegrateKinematics(x0,u,dt)

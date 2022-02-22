@@ -1,4 +1,4 @@
-function craft=BusyWorld_Initialize(PLOTFLAG,vehicle,world,NCRAFT,NN)
+function craft=BusyWorld_Initialize(PLOTFLAG,vehicle,world,NCRAFT)
 %{
 Generate the initial set of aircraft in BusyWorld
 craft.t          vector of time...
@@ -8,18 +8,15 @@ craft.xdot
 craft.RSafe
 craft.mu
 %}
+
 craft=struct;
 % Initialization of Matrices
 for n=1:NCRAFT
-    craft(n).ID = NaN*ones(1,world.KMAX);
-    craft(n).index = NaN*ones(NN,world.KMAX);
-    craft(n).newlySorted = NaN*ones(NN,world.KMAX);
-    %craft(n).distanceArray = NaN*ones(NCRAFT,2);
-    craft(n).x=NaN*ones(6,world.KMAX);
-    craft(n).u=NaN*ones(3,world.KMAX);
-    craft(n).xdot=NaN*ones(6,world.KMAX);
-    craft(n).r_min=NaN*ones(1,world.KMAX); % closest distance to nearest vehicle
-    craft(n).rcheck=NaN*ones(1,world.KMAX); % closest distance to nearest vehicle
+    craft(n).x= zeros(6,world.KMAX);
+    craft(n).u= zeros(3,world.KMAX);
+    craft(n).xdot= zeros(6,world.KMAX);
+    craft(n).r_min= NaN*zeros(1,world.KMAX); % closest distance to nearest vehicle
+    craft(n).minDistance= NaN*zeros(1,world.KMAX); % closest distance to nearest vehicle
     craft(n).Rsafe=vehicle.RSafe(1) + (vehicle.RSafe(2) - vehicle.RSafe(1))*rand(1); % vehicle safe zone radius
     craft(n).xc=[0;0;0]; % location of safe sphere center in vehicle body frame
     craft(n).umax(1,1)=vehicle.vdot(1) + (vehicle.vdot(2) - vehicle.vdot(1))*rand(1); % vehicle max acceleration
@@ -36,7 +33,7 @@ dist=1000*ones(1,NCRAFT);
 
 for n=1:NCRAFT
     %fprintf('Generating initial state for craft %d of %d\n',n,NCRAFT)
-    craft(n).u(:,1)=[0;0;0]; % Initially at straight & level, constant speed
+    % craft(n).u(:,1)=[0;0;0]; % Initially at straight & level, constant speed
     VALIDSTART=0;
     while VALIDSTART==0
         [x0,xgoal]=GenerateInitialAndGoalPositions(world);
@@ -45,13 +42,13 @@ for n=1:NCRAFT
         end
         if min(dist)>craft(n).Rsafe
             VALIDSTART=1;
-            dist=NaN*ones(1,NCRAFT);
+            dist= 1e10*ones(1,NCRAFT);
         end
     end
     
     %Getting the ID number for a craft
-    for x = 1:NCRAFT
-        craft(x).ID = x;
+    for nc = 1:NCRAFT
+        craft(nc).ID = nc;
     end
     
     v0=vehicle.speed(1) + (vehicle.speed(2) - vehicle.speed(1))*rand(1); % Compute initial speed
